@@ -3,9 +3,9 @@
  * @license Apache-2.0, see LICENSE for full text.
  */
 import { LitElement, html, css } from "lit";
-import { property } from "lit/decorators.js";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import { I18NMixin } from "@haxtheweb/i18n-manager/lib/I18NMixin.js";
+import "@haxtheweb/rpg-character/rpg-character.js";
 
 /**
  * `github-rpg-contributors`
@@ -41,8 +41,7 @@ export class GithubRpgContributors extends DDDSuper(I18NMixin(LitElement)) {
         `${this.githubApiUrl}/repos/${organization}/${repo}/contributors`,
       );
       const contributors = await contributorsResponse.json();
-      console.log(contributors);
-      this.__contributors = contributors;
+      return contributors;
     } catch (error) {
       console.error("Failed to fetch from github api with error", error);
     }
@@ -51,22 +50,26 @@ export class GithubRpgContributors extends DDDSuper(I18NMixin(LitElement)) {
   async firstUpdated(changedProperties) {
     super.firstUpdated(changedProperties);
     if (this.repo && this.organization) {
-      console.log("firstUpdated", changedProperties);
-
-      await this.fetchContributors(this.organization, this.repo);
+      this.__contributors = await this.fetchContributors(
+        this.organization,
+        this.repo,
+      );
     }
   }
 
   async updated(changedProperties) {
     super.updated(changedProperties);
-    console.log(changedProperties.keys());
-    new Set(new Map().keys());
-    console.log("updated", changedProperties);
-
-    // await this.fetchContributors(this.organization, this.repo);
+    if (
+      changedProperties.has("repo") ||
+      changedProperties.has("organization")
+    ) {
+      this.__contributors = await this.fetchContributors(
+        this.organization,
+        this.repo,
+      );
+    }
   }
 
-  // Lit reactive properties
   static get properties() {
     return {
       ...super.properties,
@@ -76,17 +79,14 @@ export class GithubRpgContributors extends DDDSuper(I18NMixin(LitElement)) {
     };
   }
 
-  // Lit scoped styles
   static get styles() {
     return [super.styles, css``];
   }
 
-  // Lit render the HTML
   render() {
-    return html` <div class="wrapper">
-      <h3><span>:</span></h3>
-      <slot></slot>
-    </div>`;
+    return this.__contributors?.map((contributor) => {
+      return html`<rpg-character seed="${contributor.login}"></rpg-character>`;
+    });
   }
 
   /**
