@@ -85,7 +85,11 @@ export class GithubRpgContributors extends DDDSuper(I18NMixin(LitElement)) {
 
   render() {
     return this.__contributors?.map((contributor) => {
-      return html`<rpg-character seed="${contributor.login}"></rpg-character>`;
+      return html`<rpg-character
+        @click="${() =>
+          window.open(contributor.html_url, "_blank", "noopener,noreferrer")}"
+        seed="${contributor.login}"
+      ></rpg-character>`;
     });
   }
 
